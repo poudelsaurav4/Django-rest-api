@@ -83,18 +83,76 @@
 #     def delete(self, request, *args, **kwargs):
 #         return self.destroy(request, *args, **kwargs)
     
-
+from rest_framework import viewsets
 from snippets.models import Snippet
 from snippets.serializers import SnippetSerializer
+from snippets.serializers import UserSerializer
 from rest_framework import generics
+from rest_framework import permissions
+from django.contrib.auth.models import User
+from snippets.permissions import IsOwnerOrReadOnly
+from rest_framework.decorators import api_view, action
+from rest_framework.response import Response
+from rest_framework.reverse import reverse
+from rest_framework import renderers
+
+# class SnippetList(generics.ListCreateAPIView):
+#     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+#     queryset = Snippet.objects.all()
+#     serializer_class = SnippetSerializer
+#     def perform_create(self, serializer):
+#         serializer.save(owner=self.request.user)
+        
+# class SnippetDetails(generics.RetrieveUpdateDestroyAPIView):
+#     queryset = Snippet.objects.all()
+#     permission_classes = [permissions.IsAuthenticatedOrReadOnly,
+#                       IsOwnerOrReadOnly]
+#     serializer_class = SnippetSerializer
+
+# class UserList(generics.ListAPIView):
+#     queryset = User.objects.all()
+#     serializer_class = UserSerializer
+
+    
+# class UserDetails(generics.RetrieveAPIView):
+#     queryset = User.objects.all()
+#     serializer_class = UserSerializer
 
 
-class SnippetList(generics.ListCreateAPIView):
+# class SnippetHighlight(generics.GenericAPIView):
+#     queryset = Snippet.objects.all()
+#     renderer_classes = [renderers.StaticHTMLRenderer]
+
+#     def get(self, request, *args, **kwargs):
+#         snippet = self.get_object()
+#         return Response(snippet.highlighted)
+
+
+# @api_view(['GET'])
+# def api_root(request, format=None):
+#     return Response({
+#         'users': reverse('user', request=request, format=format),
+#         'snippets': reverse('snippet', request=request, format=format)
+#     })
+
+
+
+class UserViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = Snippet.objects.all()
+    serializer_class = UserSerializer
+
+
+class SnippetViewSet(viewsets.ModelViewSet):
     queryset = Snippet.objects.all()
     serializer_class = SnippetSerializer
-    
-class SnippetDetails(generics.RetrieveUpdateDestroyAPIView):
-    queryset = Snippet.objects.all()
-    serializer_class = SnippetSerializer
+    permission_classes = {permissions.IsAuthenticatedOrReadOnly, IsOwnerOrReadOnly}
 
-    
+    @action(detail=True, renderer_classes=[renderers.StaticHTMLRenderer])
+    def highlight(self, request, *args, **kkwargs):
+        snippet = self.get_object()
+        return Response(snippet.highlighted)
+
+
+    def perform_create(self, serializer):
+        serializer.save(owner = self.request.user)
+        
