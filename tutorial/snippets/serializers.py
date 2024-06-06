@@ -21,7 +21,7 @@ from snippets.models import Snippet, LANGUAGE_CHOICES, STYLE_CHOICES
 #         instance.style = validated_data.get('style', instance.style)
 #         instance.save()
 #         return instance 
-
+    
 
 class SnippetSerializer(serializers.ModelSerializer):
 
